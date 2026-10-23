@@ -1,0 +1,298 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Theme tokens. Values are "R G B" so Tailwind can add alpha. Dark is the default. */
+:root,
+:root[data-theme="dark"] {
+  --bg: 7 14 28; /* #070E1C */
+  --surface: 13 23 46; /* slightly lighter navy */
+  --raised: 20 33 62;
+  --ink: 238 241 246; /* off white */
+  --muted: 154 168 192; /* blue grey */
+  --accent: 45 212 191; /* teal */
+  --accent-fg: 4 32 28;
+  --line: 255 255 255; /* hairline base, used at 8% */
+  --line-alpha: 0.08;
+  --shadow: 0 0 0;
+  color-scheme: dark;
+}
+
+:root[data-theme="light"] {
+  --bg: 246 248 251;
+  --surface: 255 255 255;
+  --raised: 238 242 247;
+  --ink: 11 18 32;
+  --muted: 71 85 105;
+  --accent: 10 100 93;
+  --accent-fg: 255 255 255;
+  --line: 7 14 28;
+  --line-alpha: 0.1;
+  --shadow: 15 30 60;
+  color-scheme: light;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    @apply bg-bg text-ink antialiased;
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-feature-settings: "ss01", "cv11";
+  }
+  h1,
+  h2,
+  h3 {
+    @apply font-semibold tracking-tight text-ink;
+    text-wrap: balance;
+  }
+  p {
+    text-wrap: pretty;
+  }
+  ::selection {
+    background: rgb(var(--accent) / 0.3);
+  }
+  :focus-visible {
+    outline: 2px solid rgb(var(--accent));
+    outline-offset: 3px;
+    border-radius: 6px;
+  }
+  main:focus {
+    outline: none;
+  }
+}
+
+@layer components {
+  .hairline {
+    border: 1px solid rgb(var(--line) / var(--line-alpha));
+  }
+  .section {
+    @apply mx-auto w-full max-w-page px-5 py-14 sm:px-8 sm:py-20;
+  }
+  .h-display {
+    @apply text-[2.5rem] font-semibold leading-[1.05] tracking-tightest sm:text-6xl lg:text-7xl;
+  }
+  .h-section {
+    @apply text-3xl font-semibold leading-tight tracking-tightest sm:text-4xl;
+  }
+  .eyebrow {
+    @apply text-sm font-medium uppercase tracking-[0.14em] text-accent;
+  }
+  .lede {
+    @apply text-lg leading-relaxed text-muted sm:text-xl;
+  }
+  .link {
+    @apply text-accent underline decoration-accent/40 underline-offset-4 transition-colors hover:decoration-accent;
+  }
+  .badge {
+    @apply inline-flex items-center rounded-full bg-accent/10 px-2.5 py-1 text-xs font-medium text-accent;
+    border: 1px solid rgb(var(--accent) / 0.25);
+  }
+  .btn {
+    @apply inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold transition duration-200;
+  }
+  .btn-primary {
+    @apply btn bg-accent text-accent-fg hover:brightness-110;
+  }
+  .btn-ghost {
+    @apply btn text-ink hover:bg-ink/5;
+    border: 1px solid rgb(var(--line) / calc(var(--line-alpha) * 2));
+  }
+  .arrow {
+    display: inline-block;
+    transition: transform 0.2s ease;
+  }
+  :is(.group, .btn):is(:hover, :focus-visible) .arrow {
+    transform: translateX(4px);
+  }
+  .chip {
+    @apply inline-flex min-h-[44px] items-center rounded-full px-4 text-sm font-medium text-muted transition-colors hover:text-ink sm:min-h-[36px];
+    border: 1px solid rgb(var(--line) / calc(var(--line-alpha) * 1.5));
+  }
+  .chip[aria-pressed="true"] {
+    @apply bg-accent/10 text-accent;
+    border-color: rgb(var(--accent) / 0.5);
+  }
+}
+
+/* ---------- Spotlight card ----------
+   --x / --y are set by SpotlightCard on pointer move. Layers, bottom to top:
+   glow (behind content), content, dim veil (darkens everything outside the spotlight),
+   lit border (visible only near the cursor). */
+.spot {
+  --x: 50%;
+  --y: 50%;
+  --r: 240px;
+  position: relative;
+  isolation: isolate;
+  border-radius: 18px;
+  background: rgb(var(--surface));
+  border: 1px solid rgb(var(--line) / var(--line-alpha));
+  box-shadow: 0 10px 30px -14px rgb(var(--shadow) / 0.35);
+  transition: transform 0.25s ease, border-color 0.25s ease;
+}
+.spot::before,
+.spot::after,
+.spot > .spot-veil {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+.spot::before {
+  /* glow */
+  z-index: -1;
+  background: radial-gradient(var(--r) circle at var(--x) var(--y), rgb(var(--accent) / 0.16), transparent 70%);
+}
+.spot > .spot-veil {
+  /* dims content outside the spotlight */
+  z-index: 2;
+  background: rgb(var(--surface) / 0.5);
+  -webkit-mask-image: radial-gradient(var(--r) circle at var(--x) var(--y), transparent 0%, #000 100%);
+  mask-image: radial-gradient(var(--r) circle at var(--x) var(--y), transparent 0%, #000 100%);
+}
+.spot::after {
+  /* lit border */
+  z-index: 3;
+  border: 1px solid rgb(var(--accent) / 0.85);
+  -webkit-mask-image: radial-gradient(calc(var(--r) * 0.9) circle at var(--x) var(--y), #000, transparent 100%);
+  mask-image: radial-gradient(calc(var(--r) * 0.9) circle at var(--x) var(--y), #000, transparent 100%);
+}
+.spot:hover,
+.spot[data-lit="true"],
+.spot:focus-within {
+  transform: translateY(-2px);
+}
+.spot:hover::before,
+.spot:hover::after,
+.spot:hover > .spot-veil,
+.spot[data-lit="true"]::before,
+.spot[data-lit="true"]::after,
+.spot[data-lit="true"] > .spot-veil {
+  opacity: 1;
+}
+/* Keyboard users get the lit border without needing a pointer */
+.spot:focus-within {
+  border-color: rgb(var(--accent) / 0.7);
+}
+
+/* ---------- Scroll reveal ---------- */
+.js .reveal {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.6s ease, transform 0.6s cubic-bezier(0.2, 0.7, 0.2, 1);
+  transition-delay: var(--delay, 0ms);
+}
+.js .reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+/* ---------- Skills graph ---------- */
+.graph-line {
+  stroke: rgb(var(--line) / 0.18);
+  stroke-width: 1;
+  transition: stroke 0.25s ease, opacity 0.25s ease;
+}
+.graph-line[data-on="true"] {
+  stroke: rgb(var(--accent));
+  stroke-width: 1.5;
+  stroke-dasharray: 4 4;
+  animation: dash 1.2s linear infinite;
+}
+@keyframes dash {
+  to {
+    stroke-dashoffset: -16;
+  }
+}
+.graph-node {
+  cursor: pointer;
+  outline: none;
+}
+.graph-node:focus-visible .graph-node-ring {
+  stroke: rgb(var(--accent));
+  stroke-width: 3;
+}
+
+/* ---------- Print: recruiter view and CV ---------- */
+@media print {
+  :root,
+  :root[data-theme="dark"],
+  :root[data-theme="light"] {
+    --bg: 255 255 255;
+    --surface: 255 255 255;
+    --raised: 245 245 245;
+    --ink: 15 23 42;
+    --muted: 71 85 105;
+    --accent: 10 100 93;
+    --accent-fg: 255 255 255;
+    --line: 0 0 0;
+    --line-alpha: 0.15;
+  }
+  .no-print,
+  header,
+  footer,
+  .skip-link {
+    display: none !important;
+  }
+  .js .reveal {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  .spot {
+    box-shadow: none;
+  }
+  .section {
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+  }
+  a {
+    text-decoration: none;
+  }
+  .avoid-break {
+    break-inside: avoid;
+  }
+  @page {
+    margin: 14mm;
+  }
+}
+
+/* ---------- Reduced motion: switch every effect off ---------- */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition-duration: 0.01ms !important;
+    transition-delay: 0ms !important;
+  }
+  .js .reveal {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  .spot:hover,
+  .spot[data-lit="true"],
+  .spot:focus-within {
+    transform: none;
+  }
+  /* No moving spotlight: keep a static border cue on hover */
+  .spot::before,
+  .spot::after,
+  .spot > .spot-veil {
+    display: none;
+  }
+  .spot:hover {
+    border-color: rgb(var(--accent) / 0.6);
+  }
+  :is(.group, .btn):is(:hover, :focus-visible) .arrow {
+    transform: none;
+  }
+}
